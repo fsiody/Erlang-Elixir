@@ -1,0 +1,39 @@
+%%%-------------------------------------------------------------------
+%%% @author helen
+%%% @copyright (C) 2019, <COMPANY>
+%%% @doc
+%%%
+%%% @end
+%%% Created : 13. Apr 2019 12:09
+%%%-------------------------------------------------------------------
+-module(pollution_test).
+-author("helen").
+
+-include_lib("eunit/include/eunit.hrl").
+
+
+addStation_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(Monitor, "Station1", {1, 2}),
+  ?assertEqual(pollution:addStation(Monitor1, "Station1", {2, 3}), {error,stationIsAlredyExist}),
+  ?assertEqual(pollution:addStation(Monitor1, "Station2", {1, 2}), {error,stationIsAlredyExist}).
+
+addValue_test() ->
+  Date1 = calendar:local_time(),
+  Monitor = pollution:createMonitor(),
+
+  ?assertEqual(pollution:addValue(Monitor, "Station1", Date1, "PM10", 12.2), {error,noStation}).
+
+getOneValue_test() ->
+  {Date, {Hour, Minute, Second}} = calendar:local_time(),
+  Date1 = {Date, {Hour, Minute, Second}},
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(Monitor, "Station1", {1, 2}),
+  Monitor2 = pollution:addValue(Monitor1, "Station1", Date1, "PM10", 1),
+  Monitor4 = pollution:addValue(Monitor2, "Station1", {Date, {Hour+10, Minute, Second }}, "PM10", 99),
+
+  ?assertEqual(pollution:getOneValue(Monitor4, {1, 2}, Date1, "PM10"), 1),
+  ?assertEqual(pollution:getStationMean(Monitor4, "Station1", "PM10"), 50),
+
+  Monitor5 = pollution:removeValue(Monitor4, {1, 2}, Date1, "PM10"),
+  ?assertEqual(pollution:getStationMean(Monitor5, "Station1", "PM10"), {error,noData}).
